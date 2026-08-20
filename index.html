@@ -63,11 +63,45 @@
   .prog{ display:flex;gap:4px;justify-content:center;padding:0 14px 14px;position:relative;z-index:3; }
   .prog i{height:3px;flex:1;background:rgba(255,255,255,.18);border-radius:2px}
   .prog i.on{background:var(--gold)}
+  .snd{
+    flex:none; margin-left:12px; width:34px;height:34px; border-radius:50%;
+    background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18);
+    color:var(--gold-l); cursor:pointer; display:grid;place-items:center; padding:0;
+  }
+  .snd svg{width:19px;height:19px}
+  .snd.off{color:rgba(255,255,255,.45)}
+  .start{
+    position:absolute; inset:0; z-index:6; display:grid; place-items:center;
+    background:rgba(12,11,9,.72); text-align:center; padding:24px;
+  }
+  .start.hide{display:none}
+  .start .t{font-size:19px;font-weight:700;letter-spacing:.03em;margin-bottom:14px}
+  .start .s{font-size:14px;opacity:.85;margin-bottom:8px}
+  .start .s2{font-size:12px;opacity:.6}
+  .speaking{
+    display:inline-flex; gap:3px; align-items:flex-end; height:12px; margin-left:8px;
+    vertical-align:middle;
+  }
+  .speaking i{width:2.5px;background:currentColor;border-radius:1px;animation:snd 1s ease-in-out infinite}
+  .speaking i:nth-child(1){height:5px;animation-delay:0s}
+  .speaking i:nth-child(2){height:11px;animation-delay:.18s}
+  .speaking i:nth-child(3){height:7px;animation-delay:.36s}
+  @keyframes snd{0%,100%{transform:scaleY(.4)}50%{transform:scaleY(1)}}
+  .speaking.hide{display:none}
+  .stat .sm{display:none}
   @media (max-width:520px){
     .box{font-size:15px;line-height:1.95;min-height:172px}
-    .spot{font-size:14px}
-    .status{gap:10px}
-    .stat b{font-size:14px}
+    .bar{padding:10px 12px;gap:7px}
+    .spot{font-size:13px;white-space:nowrap}
+    .spot small{font-size:10px}
+    .status{gap:9px}
+    .stat{font-size:10px}
+    .stat b{font-size:13px}
+    .stat .lg{display:none}
+    .stat .sm{display:inline}
+    .snd{width:30px;height:30px;margin-left:8px}
+    .snd svg{width:17px;height:17px}
+    .start .t{font-size:17px}
   }
 </style>
 </head>
@@ -80,8 +114,23 @@
     </svg>
     <div class="spot">鹿苑寺（金閣寺）<small>京都府 京都市北区</small></div>
     <div class="status">
-      <div class="stat">きょう歩いた距離<b>3.4 km</b></div>
-      <div class="stat">語り部レベル<b>7</b></div>
+      <div class="stat"><span class="lg">きょう歩いた距離</span><span class="sm">歩いた距離</span><b>3.4 km</b></div>
+      <div class="stat"><span class="lg">語り部レベル</span><span class="sm">レベル</span><b>7</b></div>
+    </div>
+    <button class="snd" id="snd" title="音声のオン・オフ" aria-label="音声のオン・オフ">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M4 9h4l5-4v14l-5-4H4z"/>
+        <g id="wave"><path d="M16.5 9.5a3.5 3.5 0 0 1 0 5"/><path d="M19 7a7 7 0 0 1 0 10"/></g>
+        <g id="mute" style="display:none"><path d="M17 9.5l4 5M21 9.5l-4 5"/></g>
+      </svg>
+    </button>
+  </div>
+
+  <div class="start" id="start">
+    <div>
+      <p class="t">鹿苑寺（金閣寺）に着きました</p>
+      <p class="s">画面を押すと、物語が始まります</p>
+      <p class="s2">音声が流れます。イヤホンをお使いください</p>
     </div>
   </div>
 
@@ -148,7 +197,7 @@
   </div>
 
   <div class="talk is-nav" id="talk">
-    <div class="speaker" id="speaker">ナレーション</div>
+    <div class="speaker"><span id="speakerName">ナレーション</span><span class="speaking hide" id="speaking"><i></i><i></i><i></i></span></div>
     <div class="box">
       <div class="line" id="line"></div>
       <button class="next" id="next">つづき <span>▼</span></button>
@@ -160,24 +209,22 @@
 
 <script>
 const script = [
-  {who:"ナレーション", type:"nav", text:"目の前の建物を、もう一度よく見てください。\n\n上の二つの層は金色に光っています。でも、いちばん下の層だけは、金色ではありません。"},
-  {who:"ナレーション", type:"nav", text:"塗り忘れたわけではありません。これは、六百年以上前に、ひとりの人物がわざとそうさせたものです。"},
-  {who:"足利義満", type:"yos", text:"わしの名は足利義満。室町幕府の三代将軍じゃ。\n\n応永四年、西暦でいえば一三九七年。わしはこの山を手に入れた。もとは西園寺という貴族の別荘があった土地じゃ。"},
-  {who:"足利義満", type:"yos", text:"荒れ果てておったのを、わしが譲り受けた。\n\nここに建てたのが、いま目の前にあるものよ。北山殿と呼ばせた。"},
-  {who:"ナレーション", type:"nav", text:"義満がこの建物にこめたものは、金の輝きだけではありませんでした。\n\n三つの層は、それぞれ建て方が違います。"},
-  {who:"足利義満", type:"yos", text:"いちばん下は、法水院。貴族の屋敷の造りじゃ。\n\n二つ目は、潮音洞。武士の館の造りにした。\n\nそして三つ目、究竟頂。これは禅の寺の造りよ。"},
-  {who:"ナレーション", type:"nav", text:"貴族の造り、武士の造り、寺の造り。\n\nまったく違う三つを、ひとつの建物に積み上げる。ふつうはやりません。"},
-  {who:"足利義満", type:"yos", text:"やったのだ。\n\nわしは武士の頭領として幕府を握った。そのうえで、貴族としても位を極めた。そして最後には、髪を落として僧となった。\n\n三つとも、わしのものよ。"},
-  {who:"ナレーション", type:"nav", text:"なぜ、いちばん下だけ金がないのか。\n\nその理由を、義満自身が書き残したものは見つかっていません。「貴族より武士のほうが上だと示したのだ」と読む人もいますが、それは後の世の人の見方です。"},
-  {who:"足利義満", type:"yos", text:"わしは応永十五年、この北山殿で死んだ。五十一であった。\n\n死ぬ前に言い残した。ここを寺にせよ、と。"},
-  {who:"ナレーション", type:"nav", text:"義満の望みどおり、北山殿は禅寺になりました。義満の法号「鹿苑院殿」から名を取り、鹿苑寺と呼ばれるようになります。"},
-  {who:"ナレーション", type:"nav", text:"最後に、ひとつだけ。\n\nいま見ているこの建物は、義満が建てたそのものではありません。昭和二十五年、一九五〇年に、放火によって焼け落ちました。"},
-  {who:"足利義満", type:"yos", text:"焼けたか。\n\n……よい。また建てたのであろう。\n\nわしが建てさせたときも、この山には何もなかった。荒れた別荘があっただけよ。"},
-  {who:"ナレーション", type:"nav", text:"三つの層を、下から順に見上げてみてください。\n\n六百年前の人が、何を積み上げようとしたのか。それが、そこに立っています。"}
+  {id:"N1", who:"ナレーション", type:"nav", text:"目の前の建物を、もう一度よく見てください。\n\n上の二つの層は金色に光っています。でも、いちばん下の層だけは、金色ではありません。\n\n塗り忘れたわけではありません。これは、六百年以上前に、ひとりの人物がわざとそうさせたものです。"},
+  {id:"Y1", who:"足利義満", type:"yos", text:"わしの名は足利義満。室町幕府の三代将軍じゃ。\n\n応永四年、西暦でいえば一三九七年。わしはこの山を手に入れた。もとは西園寺という貴族の別荘があった土地じゃ。荒れ果てておったのを、わしが譲り受けた。\n\nここに建てたのが、いま目の前にあるものよ。北山殿と呼ばせた。"},
+  {id:"N2", who:"ナレーション", type:"nav", text:"義満がこの建物にこめたものは、金の輝きだけではありませんでした。\n\n三つの層は、それぞれ建て方が違います。"},
+  {id:"Y2", who:"足利義満", type:"yos", text:"いちばん下は、法水院。貴族の屋敷の造りじゃ。\n\n二つ目は、潮音洞。武士の館の造りにした。\n\nそして三つ目、究竟頂。これは禅の寺の造りよ。"},
+  {id:"N3", who:"ナレーション", type:"nav", text:"貴族の造り、武士の造り、寺の造り。\n\nまったく違う三つを、ひとつの建物に積み上げる。ふつうはやりません。"},
+  {id:"Y3", who:"足利義満", type:"yos", text:"やったのだ。\n\nわしは武士の頭領として幕府を握った。そのうえで、貴族としても位を極めた。そして最後には、髪を落として僧となった。\n\n三つとも、わしのものよ。ならば三つとも、この建物に積んでよかろう。\n\nそして金を貼ったのは、上の二層だけじゃ。いちばん下の貴族の層には、貼らせなかった。"},
+  {id:"N4", who:"ナレーション", type:"nav", text:"なぜ、いちばん下だけ金がないのか。\n\nその理由を、義満自身が書き残したものは見つかっていません。「貴族より武士のほうが上だと示したのだ」と読む人もいますが、それは後の世の人の見方です。\n\n分かっているのは、そういう形になっている、ということだけです。"},
+  {id:"Y4", who:"足利義満", type:"yos", text:"わしは応永十五年、この北山殿で死んだ。五十一であった。\n\n死ぬ前に言い残した。ここを寺にせよ、と。"},
+  {id:"N5", who:"ナレーション", type:"nav", text:"義満の望みどおり、北山殿は禅寺になりました。義満の法号「鹿苑院殿」から名を取り、鹿苑寺と呼ばれるようになります。\n\n金閣寺というのは、その中の金色の建物から生まれた呼び名です。"},
+  {id:"N6", who:"ナレーション", type:"nav", text:"最後に、ひとつだけ。\n\nいま見ているこの建物は、義満が建てたそのものではありません。\n\n昭和二十五年、一九五〇年に、放火によって焼け落ちました。いま立っているのは、五年後の昭和三十年に建て直されたものです。"},
+  {id:"Y5", who:"足利義満", type:"yos", text:"焼けたか。\n\n……よい。また建てたのであろう。\n\nわしが建てさせたときも、この山には何もなかった。荒れた別荘があっただけよ。\n\n見るがよい。おぬしの目の前に、今も建っておる。"},
+  {id:"N7", who:"ナレーション", type:"nav", text:"三つの層を、下から順に見上げてみてください。\n\n貴族の造り、武士の造り、禅の寺の造り。\n\n六百年前の人が、何を積み上げようとしたのか。それが、そこに立っています。"}
 ];
 
 const elLine = document.getElementById("line");
-const elSpeaker = document.getElementById("speaker");
+const elSpeaker = document.getElementById("speakerName");
 const elTalk = document.getElementById("talk");
 const elProg = document.getElementById("prog");
 const elNext = document.getElementById("next");
@@ -194,7 +241,46 @@ function draw(){
   dots.forEach(function(d, n){ d.classList.toggle("on", n <= i); });
   elNext.style.visibility = (i === script.length - 1) ? "hidden" : "visible";
 }
-function advance(){ if (i < script.length - 1){ i++; draw(); } }
+// 音声
+const audio = new Audio();
+audio.preload = "auto";
+const elSnd = document.getElementById("snd");
+const elSpeaking = document.getElementById("speaking");
+const elStart = document.getElementById("start");
+let soundOn = true;
+let started = false;
+
+function setSoundIcon(){
+  elSnd.classList.toggle("off", !soundOn);
+  document.getElementById("wave").style.display = soundOn ? "" : "none";
+  document.getElementById("mute").style.display = soundOn ? "none" : "";
+}
+function playCurrent(){
+  audio.pause();
+  elSpeaking.classList.add("hide");
+  if (!soundOn || !started) return;
+  audio.src = "voice/" + script[i].id + ".m4a";
+  const p = audio.play();
+  if (p && p.catch) p.catch(function(){ elSpeaking.classList.add("hide"); });
+}
+audio.addEventListener("playing", function(){ elSpeaking.classList.remove("hide"); });
+audio.addEventListener("pause", function(){ elSpeaking.classList.add("hide"); });
+audio.addEventListener("ended", function(){
+  elSpeaking.classList.add("hide");
+  if (i < script.length - 1){ i++; draw(); playCurrent(); }
+});
+elSnd.addEventListener("click", function(e){
+  e.stopPropagation();
+  soundOn = !soundOn;
+  setSoundIcon();
+  if (soundOn) playCurrent(); else audio.pause();
+});
+setSoundIcon();
+
+function advance(){
+  if (!started){ started = true; elStart.classList.add("hide"); playCurrent(); return; }
+  if (i < script.length - 1){ i++; draw(); playCurrent(); }
+}
 document.getElementById("app").addEventListener("click", advance);
 
 // 縦長の画面では絵が横に切れるので、描画する範囲を広げて全体を収める
