@@ -1,0 +1,40 @@
+# 公開しない作業ファイル（2026-09-03）
+# ★上げるのは「サイトが動くのに要るもの」だけにする。
+#   試作・ボツ・参照音声は容量を食ううえ、公開する意味がない。
+
+# 立ち絵の試作とボツ
+stories/*/chara/yoshimitsu-v*.png
+stories/*/chara/yoshimitsu.png
+stories/*/chara/yoshimitsu-painterly.png
+stories/*/chara/emo/
+stories/*/chara/emo2/
+
+# 圧縮前の元画像（公開するのは jpg / webp のほう）
+stories/*/bg/*.png
+stories/*/chara/*-cut.png
+stories/*/chara/*.jpg
+stories/*/chara/nobunaga.png
+stories/*/chara/ieyasu.png
+stories/*/chara/masamune.png
+stories/*/chara/kazumasa.png
+stories/*/chara/tsunanori.png
+stories/*/chara/terumasa.png
+stories/*/chara/kazutoyo.png
+stories/*/chara/nariakira.png
+stories/*/chara/shoin.png
+
+# 声の試作・参照音声・退避
+voice/_chara-an1/
+voice/_chara-an2/
+voice/_chara-an3/
+voice/_hikaku/
+voice/_old-2026-09-03/
+voice/_refwav/
+voice/*.wav
+stories/*/voice/_old-2026-09-03/
+
+# 参考画像（元は Wikimedia。手元に置くだけで公開はしない）
+art/
+
+# 退避
+*.bak-*

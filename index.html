@@ -2,304 +2,486 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>歩く物語 ─ 鹿苑寺（金閣寺）</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>文明の軌跡</title>
 <style>
   :root{
-    --gold:#c9a227; --gold-l:#e8cf7a; --paper:#f6f1e6;
-    --nav-bg:rgba(28,26,23,.86); --yos-bg:rgba(74,55,14,.92);
+    /* 歴史っぽい色。生成りの地に墨の文字、差し色は朱ひとつ */
+    --paper:#efe9dc;      /* 生成り（地） */
+    --paper-2:#e5ddcb;    /* 生成りの濃いほう */
+    --sumi:#26221c;       /* 墨に近い黒（真っ黒にしない） */
+    --sumi-2:#5a5348;     /* 薄い墨 */
+    --line:#cdc3ad;       /* 罫 */
+    --aka:#9b3b2f;        /* 差し色＝朱 */
+    --aka-usu:#f2e3df;
   }
-  *{box-sizing:border-box;margin:0;padding:0}
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
   body{
-    font-family:"Hiragino Sans","Yu Gothic",system-ui,sans-serif;
-    background:#14120f; color:var(--paper);
-    display:flex; justify-content:center; min-height:100vh;
+    font-family:"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP",serif;
+    background:var(--paper); color:var(--sumi);
+    display:flex; justify-content:center;
+    line-height:1.9;
   }
   .app{
-    width:100%; max-width:900px; position:relative;
-    display:flex; flex-direction:column; min-height:100vh;
-    background:linear-gradient(#1b2a3a 0%, #3d5a6c 45%, #6d7f6a 100%);
-    overflow:hidden; cursor:pointer;
+    width:100%; max-width:720px; min-height:100dvh;
+    display:flex; flex-direction:column;
+    background:var(--paper);
+    position:relative; overflow:hidden;
   }
-  .bar{
-    position:relative; z-index:3; display:flex; align-items:center; gap:10px;
-    padding:12px 16px; background:rgba(20,18,15,.55);
+
+  /* ───── 上の帯 ───── */
+  .head{
+    display:flex; align-items:center; gap:12px;
+    padding:14px 16px; border-bottom:1px solid var(--line);
+    background:var(--paper);
   }
-  .pin{width:22px;height:22px;flex:none}
-  .spot{font-size:15px;font-weight:700;letter-spacing:.02em}
-  .spot small{display:block;font-size:11px;font-weight:400;opacity:.75}
-  .status{margin-left:auto;display:flex;gap:14px;text-align:right}
-  .stat{font-size:11px;opacity:.8;line-height:1.4}
-  .stat b{display:block;font-size:15px;color:var(--gold-l);letter-spacing:.02em}
-  .scene{position:absolute; inset:0; z-index:1}
-  .scene svg{width:100%;height:100%;display:block}
-  .talk{ position:relative; z-index:3; margin-top:auto; padding:0 14px 16px; }
-  .speaker{
-    display:inline-block; font-size:12px; font-weight:700; letter-spacing:.08em;
-    padding:5px 14px; border-radius:6px 6px 0 0; transform:translateY(1px);
+  .head .name{font-size:17px; font-weight:600; letter-spacing:.08em}
+  .head .steps{margin-left:auto; text-align:right; line-height:1.35}
+  .head .steps .n{font-size:19px; font-weight:600; color:var(--aka); letter-spacing:.02em}
+  .head .steps .t{font-size:11px; color:var(--sumi-2)}
+
+  .notice{
+    padding:9px 16px; font-size:12px; line-height:1.6;
+    background:var(--aka-usu); color:var(--aka);
+    border-bottom:1px solid var(--line);
   }
+
+  /* ───── 一覧 ───── */
+  .list{padding:16px 16px 32px; display:flex; flex-direction:column; gap:12px}
+  .list .lead{font-size:13px; color:var(--sumi-2); margin-bottom:2px}
+  .card{
+    display:block; width:100%; text-align:left; cursor:pointer;
+    background:#fff; border:1px solid var(--line); border-radius:4px;
+    padding:15px 16px; font:inherit; color:inherit;
+    display:flex; gap:14px; align-items:flex-start;
+  }
+  .card:active{background:var(--paper-2)}
+  .card .no{
+    flex:none; width:30px; height:30px; border-radius:50%;
+    border:1px solid var(--aka); color:var(--aka);
+    display:grid; place-items:center; font-size:13px; margin-top:2px;
+  }
+  .card .body{flex:1; min-width:0; display:block}
+  .card .ttl{display:block; font-size:17px; font-weight:600; letter-spacing:.04em; line-height:1.5}
+  .card .sub{display:block; font-size:12px; color:var(--sumi-2); margin-top:3px}
+  .card .q{display:block; font-size:14px; margin-top:7px; line-height:1.7}
+  .card .tags{display:block; margin-top:8px}
+  .card .seen{
+    display:inline-block; font-size:11px; margin-right:6px;
+    border:1px solid var(--sumi-2); color:var(--sumi-2);
+    border-radius:3px; padding:2px 8px;
+  }
+  .card .soon{
+    display:inline-block; font-size:11px;
+    border:1px solid var(--line); color:var(--line);
+    border-radius:3px; padding:2px 8px;
+  }
+  .card.is-seen{background:var(--paper-2)}
+
+  /* ───── 物語 ───── */
+  .play{display:none; flex-direction:column; flex:1; position:relative}
+  .play.on{display:flex}
+  .list.off{display:none}
+
+  .stage{
+    position:relative; flex:1; min-height:36dvh;
+    background:linear-gradient(#d9d2c0 0%, #cdc4ae 100%);
+    overflow:hidden;
+  }
+  .stage svg{position:absolute; inset:0; width:100%; height:100%}
+  /* 背景の絵と、右側に立つ人物 */
+  .stage img.bg{position:absolute; inset:0; width:100%; height:100%; object-fit:cover}
+  .stage img.ch{
+    position:absolute; right:1%; bottom:0; height:100%;
+    object-fit:contain; object-position:bottom right;
+    opacity:1; transition:opacity .25s ease;
+    filter:drop-shadow(0 2px 10px rgba(0,0,0,.28));
+  }
+  .stage img.ch.off{opacity:0}
+
+  .talk{padding:0 14px 14px; background:var(--paper)}
+  .who{
+    display:inline-block; font-size:12px; letter-spacing:.12em;
+    padding:5px 14px; border-radius:3px 3px 0 0; transform:translateY(1px);
+    background:var(--sumi); color:var(--paper);
+  }
+  .talk.is-yos .who{background:var(--aka)}
   .box{
-    border-radius:0 10px 10px 10px; padding:18px 18px 14px;
-    line-height:2; font-size:16px; letter-spacing:.02em;
-    border:1px solid rgba(255,255,255,.14);
-    min-height:158px; display:flex; flex-direction:column;
+    border:1px solid var(--line); border-radius:0 4px 4px 4px;
+    background:#fff; padding:16px 16px 12px;
+    min-height:170px; display:flex; flex-direction:column;
   }
-  .is-nav .speaker{background:var(--nav-bg);color:#e7e2d6}
-  .is-nav .box{background:var(--nav-bg)}
-  .is-yos .speaker{background:var(--yos-bg);color:var(--gold-l)}
-  .is-yos .box{background:var(--yos-bg);border-color:rgba(201,162,39,.45)}
-  .line{white-space:pre-wrap}
+  .line{white-space:pre-wrap; font-size:16px; line-height:2.05; letter-spacing:.02em}
+  .foot{margin-top:auto; display:flex; align-items:center; gap:10px; padding-top:10px}
   .next{
-    margin-top:auto; align-self:flex-end; display:flex; align-items:center; gap:8px;
-    background:none;border:none;color:inherit;cursor:pointer;
-    font:inherit; font-size:13px; opacity:.85; padding:6px 2px;
+    margin-left:auto; background:none; border:none; font:inherit; cursor:pointer;
+    color:var(--aka); font-size:14px; display:flex; align-items:center; gap:7px;
+    padding:6px 2px;
   }
-  .next span{
-    width:22px;height:22px;border-radius:50%;
-    border:1px solid currentColor; display:grid;place-items:center; font-size:11px;
-    animation:bob 1.6s ease-in-out infinite;
+  .next i{
+    width:23px;height:23px;border-radius:50%;border:1px solid currentColor;
+    display:grid;place-items:center;font-size:11px;font-style:normal;
+    animation:bob 1.7s ease-in-out infinite;
   }
   @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(3px)}}
-  .prog{ display:flex;gap:4px;justify-content:center;padding:0 14px 14px;position:relative;z-index:3; }
-  .prog i{height:3px;flex:1;background:rgba(255,255,255,.18);border-radius:2px}
-  .prog i.on{background:var(--gold)}
-  .snd{
-    flex:none; margin-left:12px; width:34px;height:34px; border-radius:50%;
-    background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18);
-    color:var(--gold-l); cursor:pointer; display:grid;place-items:center; padding:0;
+
+  .prog{display:flex; gap:3px; padding:0 14px 12px}
+  .prog i{height:2px; flex:1; background:var(--line); border-radius:1px}
+  .prog i.on{background:var(--aka)}
+
+  .ctrl{display:flex; align-items:center; gap:8px; padding:10px 14px 0}
+  .btn{
+    background:none; border:1px solid var(--line); border-radius:3px;
+    font:inherit; font-size:13px; color:var(--sumi-2); cursor:pointer;
+    padding:7px 13px;
   }
-  .snd svg{width:19px;height:19px}
-  .snd.off{color:rgba(255,255,255,.45)}
-  .start{
-    position:absolute; inset:0; z-index:6; display:grid; place-items:center;
-    background:rgba(12,11,9,.72); text-align:center; padding:24px;
+  .btn:active{background:var(--paper-2)}
+  .btn.snd.off{color:var(--line)}
+
+  .curtain{
+    position:absolute; inset:0; z-index:5; display:grid; place-items:center;
+    background:rgba(239,233,220,.94); text-align:center; padding:26px;
   }
-  .start.hide{display:none}
-  .start .t{font-size:19px;font-weight:700;letter-spacing:.03em;margin-bottom:14px}
-  .start .s{font-size:14px;opacity:.85;margin-bottom:8px}
-  .start .s2{font-size:12px;opacity:.6}
-  .speaking{
-    display:inline-flex; gap:3px; align-items:flex-end; height:12px; margin-left:8px;
-    vertical-align:middle;
+  .curtain.hide{display:none}
+  .curtain .t{font-size:19px; font-weight:600; letter-spacing:.05em; margin-bottom:12px}
+  .curtain .q{font-size:15px; color:var(--aka); margin-bottom:16px; line-height:1.8}
+  .curtain .s{font-size:13px; color:var(--sumi-2); margin-bottom:6px}
+  .curtain .s2{font-size:12px; color:var(--sumi-2); opacity:.8}
+
+  .end{padding:28px 16px 40px; text-align:center; display:none}
+  .end.on{display:block}
+  .end .t{font-size:17px; font-weight:600; margin-bottom:16px; letter-spacing:.04em}
+
+  @media (max-width:400px){
+    .card .ttl{font-size:16px}
+    .line{font-size:16px; line-height:1.95}
+    .head .name{font-size:16px}
   }
-  .speaking i{width:2.5px;background:currentColor;border-radius:1px;animation:snd 1s ease-in-out infinite}
-  .speaking i:nth-child(1){height:5px;animation-delay:0s}
-  .speaking i:nth-child(2){height:11px;animation-delay:.18s}
-  .speaking i:nth-child(3){height:7px;animation-delay:.36s}
-  @keyframes snd{0%,100%{transform:scaleY(.4)}50%{transform:scaleY(1)}}
-  .speaking.hide{display:none}
-  .stat .sm{display:none}
-  @media (max-width:520px){
-    .box{font-size:15px;line-height:1.95;min-height:172px}
-    .bar{padding:10px 12px;gap:7px}
-    .spot{font-size:13px;white-space:nowrap}
-    .spot small{font-size:10px}
-    .status{gap:9px}
-    .stat{font-size:10px}
-    .stat b{font-size:13px}
-    .stat .lg{display:none}
-    .stat .sm{display:inline}
-    .snd{width:30px;height:30px;margin-left:8px}
-    .snd svg{width:17px;height:17px}
-    .start .t{font-size:17px}
+
+  /* ───── 横画面。縦に積むと本文が画面の下に隠れるので、左右に並べる ───── */
+  @media (orientation:landscape) and (max-height:560px){
+    .app{min-height:100dvh; max-width:none}
+    .head{padding:7px 16px}
+    .head .name{font-size:15px}
+    .head .steps .n{font-size:16px}
+
+    .play.on{
+      display:grid; height:100dvh; overflow:hidden;
+      grid-template-columns:46% 1fr;
+      grid-template-rows:auto 1fr auto;
+      grid-template-areas:
+        "stage ctrl"
+        "stage talk"
+        "stage prog";
+    }
+    .stage{grid-area:stage; min-height:0; height:100%}
+    .ctrl{grid-area:ctrl; padding:8px 14px 0}
+    .btn{padding:5px 11px; font-size:12px}
+    .talk{grid-area:talk; min-height:0; display:flex; flex-direction:column; padding:0 14px 6px}
+    .who{align-self:flex-start}   /* 縦並びにすると名札が横いっぱいに伸びるので止める */
+    /* 本文だけを中でスクロールさせ、「つづき」は下に貼り付けたままにする */
+    .box{min-height:0; flex:1; overflow:hidden; padding:12px 14px 8px}
+    .line{font-size:15px; line-height:1.85; flex:1 1 auto; min-height:0; overflow-y:auto}
+    .foot{flex:none; margin-top:6px}
+    .prog{grid-area:prog; padding:0 14px 8px}
+    /* おしまいの画面は、本文があった場所にそのまま入れる */
+    .end{grid-column:2; grid-row:2 / span 2; padding:18px 16px; overflow-y:auto}
   }
 </style>
 </head>
 <body>
 <div class="app" id="app">
 
-  <div class="bar">
-    <svg class="pin" viewBox="0 0 24 24" fill="none" stroke="#e8cf7a" stroke-width="1.8">
-      <path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.4"/>
-    </svg>
-    <div class="spot">鹿苑寺（金閣寺）<small>京都府 京都市北区</small></div>
-    <div class="status">
-      <div class="stat"><span class="lg">きょう歩いた距離</span><span class="sm">歩いた距離</span><b>3.4 km</b></div>
-      <div class="stat"><span class="lg">語り部レベル</span><span class="sm">レベル</span><b>7</b></div>
-    </div>
-    <button class="snd" id="snd" title="音声のオン・オフ" aria-label="音声のオン・オフ">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-        <path d="M4 9h4l5-4v14l-5-4H4z"/>
-        <g id="wave"><path d="M16.5 9.5a3.5 3.5 0 0 1 0 5"/><path d="M19 7a7 7 0 0 1 0 10"/></g>
-        <g id="mute" style="display:none"><path d="M17 9.5l4 5M21 9.5l-4 5"/></g>
-      </svg>
-    </button>
-  </div>
-
-  <div class="start" id="start">
-    <div>
-      <p class="t">鹿苑寺（金閣寺）に着きました</p>
-      <p class="s">画面を押すと、物語が始まります</p>
-      <p class="s2">音声が流れます。イヤホンをお使いください</p>
+  <div class="head">
+    <div class="name" id="headName">文明の軌跡</div>
+    <div class="steps">
+      <div class="n" id="steps">99999</div>
+      <div class="t">残り歩数</div>
     </div>
   </div>
 
-  <div class="scene">
-    <svg id="scene" viewBox="0 0 900 620" preserveAspectRatio="xMidYMax slice" aria-label="金閣の風景">
-      <defs>
-        <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="#1b2a3a"/><stop offset="1" stop-color="#5b7286"/>
-        </linearGradient>
-        <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="#f0d98a"/><stop offset="1" stop-color="#b8901c"/>
-        </linearGradient>
-        <linearGradient id="wood" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="#efe7d4"/><stop offset="1" stop-color="#cdbfa4"/>
-        </linearGradient>
-        <linearGradient id="pond" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="#41586a"/><stop offset="1" stop-color="#22303c"/>
-        </linearGradient>
-        <radialGradient id="glow" cx="50%" cy="50%" r="50%">
-          <stop offset="0" stop-color="#e8cf7a" stop-opacity=".16"/>
-          <stop offset="1" stop-color="#e8cf7a" stop-opacity="0"/>
-        </radialGradient>
-        <filter id="ripple" x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur stdDeviation="6"/>
-        </filter>
-      </defs>
-
-      <rect width="900" height="620" fill="url(#sky)"/>
-      <path d="M0 300 L150 200 L280 285 L420 175 L560 280 L700 205 L900 300 L900 620 L0 620Z" fill="#2f4438" opacity=".75"/>
-      <path d="M0 340 L180 265 L340 335 L500 255 L660 330 L820 270 L900 320 L900 620 L0 620Z" fill="#38513f" opacity=".85"/>
-
-      <circle cx="448" cy="250" r="240" fill="url(#glow)"/>
-
-      <g id="pavilion" transform="translate(300 120)">
-        <rect x="78" y="0" width="140" height="52" fill="url(#gold)"/>
-        <path d="M62 4 L234 4 L206 -22 L90 -22Z" fill="#2c2a24"/>
-        <g fill="#e8cf7a">
-          <path d="M148 -26 C142 -34 144 -44 150 -48 C152 -42 156 -40 158 -36 C162 -40 164 -44 163 -49 C170 -43 170 -32 162 -27 Z"/>
-          <path d="M148 -26 L136 -33 L146 -31 Z"/>
-        </g>
-        <rect x="52" y="60" width="192" height="66" fill="url(#gold)"/>
-        <path d="M32 64 L264 64 L232 34 L64 34Z" fill="#2c2a24"/>
-        <rect x="26" y="134" width="244" height="80" fill="url(#wood)"/>
-        <path d="M2 138 L294 138 L262 106 L34 106Z" fill="#2c2a24"/>
-        <g stroke="#9d8f74" stroke-width="2">
-          <line x1="62" y1="140" x2="62" y2="214"/><line x1="110" y1="140" x2="110" y2="214"/>
-          <line x1="186" y1="140" x2="186" y2="214"/><line x1="234" y1="140" x2="234" y2="214"/>
-        </g>
-        <rect x="14" y="214" width="268" height="12" fill="#4b4639"/>
-      </g>
-
-      <rect y="360" width="900" height="260" fill="url(#pond)"/>
-      <use href="#pavilion" transform="translate(0 720) scale(1 -1)"
-           opacity=".13" filter="url(#ripple)"/>
-      <g stroke="#8ea6b4" stroke-width="1.6" opacity=".3">
-        <line x1="120" y1="392" x2="330" y2="392"/><line x1="520" y1="404" x2="770" y2="404"/>
-        <line x1="200" y1="432" x2="470" y2="432"/><line x1="560" y1="452" x2="810" y2="452"/>
-      </g>
-      <g fill="#25382c">
-        <path d="M46 372 L82 292 L118 372Z"/><rect x="78" y="366" width="8" height="26"/>
-        <path d="M792 380 L822 314 L852 380Z"/><rect x="818" y="374" width="8" height="24"/>
-      </g>
-    </svg>
+  <div class="notice" id="notice">
+    試運転版のため、歩数は減りません。ふだんは1,000歩で物語が1本ひらきます。
   </div>
 
-  <div class="talk is-nav" id="talk">
-    <div class="speaker"><span id="speakerName">ナレーション</span><span class="speaking hide" id="speaking"><i></i><i></i><i></i></span></div>
-    <div class="box">
-      <div class="line" id="line"></div>
-      <button class="next" id="next">つづき <span>▼</span></button>
+  <!-- 一覧 -->
+  <div class="list" id="list">
+    <p class="lead">聞きたい場所を選んでください。</p>
+  </div>
+
+  <!-- 物語 -->
+  <div class="play" id="play">
+    <div class="stage" id="stage"></div>
+
+    <div class="ctrl">
+      <button class="btn" id="back">一覧へ</button>
+      <button class="btn snd" id="snd">音声を止める</button>
+    </div>
+
+    <div class="talk is-nav" id="talk">
+      <div class="who" id="who">ナレーション</div>
+      <div class="box">
+        <div class="line" id="line"></div>
+        <div class="foot">
+          <button class="next" id="next">つづき <i>▼</i></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="prog" id="prog"></div>
+
+    <div class="curtain" id="curtain">
+      <div>
+        <p class="t" id="curTitle"></p>
+        <p class="q" id="curQ"></p>
+        <p class="s">画面を押すと、物語が始まります</p>
+        <p class="s2">音声が流れます。イヤホンをお使いください</p>
+      </div>
+    </div>
+
+    <div class="end" id="end">
+      <p class="t">おしまい</p>
+      <button class="btn" id="toList">一覧へもどる</button>
     </div>
   </div>
 
-  <div class="prog" id="prog"></div>
 </div>
 
 <script>
-const script = [
-  {id:"N1", who:"ナレーション", type:"nav", text:"目の前の建物を、もう一度よく見てください。\n\n上の二つの層は金色に光っています。でも、いちばん下の層だけは、金色ではありません。\n\n塗り忘れたわけではありません。これは、六百年以上前に、ひとりの人物がわざとそうさせたものです。"},
-  {id:"Y1", who:"足利義満", type:"yos", text:"わしの名は足利義満。室町幕府の三代将軍じゃ。\n\n応永四年、西暦でいえば一三九七年。わしはこの山を手に入れた。もとは西園寺という貴族の別荘があった土地じゃ。荒れ果てておったのを、わしが譲り受けた。\n\nここに建てたのが、いま目の前にあるものよ。北山殿と呼ばせた。"},
-  {id:"N2", who:"ナレーション", type:"nav", text:"義満がこの建物にこめたものは、金の輝きだけではありませんでした。\n\n三つの層は、それぞれ建て方が違います。"},
-  {id:"Y2", who:"足利義満", type:"yos", text:"いちばん下は、法水院。貴族の屋敷の造りじゃ。\n\n二つ目は、潮音洞。武士の館の造りにした。\n\nそして三つ目、究竟頂。これは禅の寺の造りよ。"},
-  {id:"N3", who:"ナレーション", type:"nav", text:"貴族の造り、武士の造り、寺の造り。\n\nまったく違う三つを、ひとつの建物に積み上げる。ふつうはやりません。"},
-  {id:"Y3", who:"足利義満", type:"yos", text:"やったのだ。\n\nわしは武士の頭領として幕府を握った。そのうえで、貴族としても位を極めた。そして最後には、髪を落として僧となった。\n\n三つとも、わしのものよ。ならば三つとも、この建物に積んでよかろう。\n\nそして金を貼ったのは、上の二層だけじゃ。いちばん下の貴族の層には、貼らせなかった。"},
-  {id:"N4", who:"ナレーション", type:"nav", text:"なぜ、いちばん下だけ金がないのか。\n\nその理由を、義満自身が書き残したものは見つかっていません。「貴族より武士のほうが上だと示したのだ」と読む人もいますが、それは後の世の人の見方です。\n\n分かっているのは、そういう形になっている、ということだけです。"},
-  {id:"Y4", who:"足利義満", type:"yos", text:"わしは応永十五年、この北山殿で死んだ。五十一であった。\n\n死ぬ前に言い残した。ここを寺にせよ、と。"},
-  {id:"N5", who:"ナレーション", type:"nav", text:"義満の望みどおり、北山殿は禅寺になりました。義満の法号「鹿苑院殿」から名を取り、鹿苑寺と呼ばれるようになります。\n\n金閣寺というのは、その中の金色の建物から生まれた呼び名です。"},
-  {id:"N6", who:"ナレーション", type:"nav", text:"最後に、ひとつだけ。\n\nいま見ているこの建物は、義満が建てたそのものではありません。\n\n昭和二十五年、一九五〇年に、放火によって焼け落ちました。いま立っているのは、五年後の昭和三十年に建て直されたものです。"},
-  {id:"Y5", who:"足利義満", type:"yos", text:"焼けたか。\n\n……よい。また建てたのであろう。\n\nわしが建てさせたときも、この山には何もなかった。荒れた別荘があっただけよ。\n\n見るがよい。おぬしの目の前に、今も建っておる。"},
-  {id:"N7", who:"ナレーション", type:"nav", text:"三つの層を、下から順に見上げてみてください。\n\n貴族の造り、武士の造り、禅の寺の造り。\n\n六百年前の人が、何を積み上げようとしたのか。それが、そこに立っています。"}
+"use strict";
+
+/* ───── 10本の目録。中身（台本）は stories/<dir>/story.json に置く ───── */
+const CATALOG = [
+  {dir:"001-kinkakuji", title:"鹿苑寺（金閣寺）", pref:"京都府", person:"足利義満",  era:"室町",  q:"なぜ、いちばん下だけ金色ではないのか", ready:true},
+  {dir:"002-gifujo",    title:"岐阜城",           pref:"岐阜県", person:"織田信長",  era:"戦国",  q:"なぜ「井ノ口」を「岐阜」に変えたのか", ready:true},
+  {dir:"003-nagoyajo",  title:"名古屋城",         pref:"愛知県", person:"徳川家康",  era:"江戸初", q:"なぜ息子の城に金のしゃちほこを載せたのか", ready:true},
+  {dir:"004-zuiganji",  title:"瑞巌寺",           pref:"宮城県", person:"伊達政宗",  era:"江戸初", q:"なぜ再建に五年もかけたのか", ready:true},
+  {dir:"005-matsumoto", title:"松本城",           pref:"長野県", person:"石川数正",  era:"戦国",  q:"なぜ黒い城なのか", ready:true},
+  {dir:"006-kenrokuen", title:"兼六園",           pref:"石川県", person:"前田綱紀",  era:"江戸",  q:"なぜ「兼六」という名なのか", ready:true},
+  {dir:"007-himeji",    title:"姫路城",           pref:"兵庫県", person:"池田輝政",  era:"江戸初", q:"なぜ白い城なのか", ready:true},
+  {dir:"008-kochijo",   title:"高知城",           pref:"高知県", person:"山内一豊",  era:"江戸初", q:"なぜ天守と御殿の両方が残っているのか", ready:true},
+  {dir:"009-sengan",    title:"仙巌園",           pref:"鹿児島県", person:"島津斉彬", era:"幕末",  q:"なぜ桜島を庭の一部として見たのか", ready:true},
+  {dir:"010-shokason",  title:"松下村塾",         pref:"山口県", person:"吉田松陰",  era:"幕末",  q:"なぜ一年ほどの塾から、あれだけの人が出たのか", ready:true}
 ];
 
-const elLine = document.getElementById("line");
-const elSpeaker = document.getElementById("speakerName");
-const elTalk = document.getElementById("talk");
-const elProg = document.getElementById("prog");
-const elNext = document.getElementById("next");
-let i = 0;
+const SEEN_KEY = "bunmei.seen";
+function loadSeen(){
+  try { return JSON.parse(localStorage.getItem(SEEN_KEY) || "[]"); }
+  catch(e){ return []; }
+}
+function markSeen(dir){
+  try {
+    const s = loadSeen();
+    if (s.indexOf(dir) < 0){ s.push(dir); localStorage.setItem(SEEN_KEY, JSON.stringify(s)); }
+  } catch(e){ /* 保存できなくても物語は見られる */ }
+}
 
-script.forEach(function(){ elProg.insertAdjacentHTML("beforeend", "<i></i>"); });
-const dots = Array.prototype.slice.call(elProg.children);
+/* ───── 一覧を描く ───── */
+const elList = document.getElementById("list");
+function drawList(){
+  const seen = loadSeen();
+  elList.querySelectorAll(".card").forEach(function(n){ n.remove(); });
+  CATALOG.forEach(function(c, idx){
+    const b = document.createElement("button");
+    b.className = "card" + (seen.indexOf(c.dir) >= 0 ? " is-seen" : "");
+    b.innerHTML =
+      '<span class="no">' + (idx+1) + '</span>' +
+      '<span class="body">' +
+        '<span class="ttl">' + c.title + '</span>' +
+        '<span class="sub">' + c.pref + '　' + c.person + '（' + c.era + '）</span>' +
+        '<span class="q">' + c.q + '</span>' +
+        '<span class="tags">' +
+          (seen.indexOf(c.dir) >= 0 ? '<span class="seen">見た</span>' : '') +
+          (c.ready ? '' : '<span class="soon">準備中</span>') +
+        '</span>' +
+      '</span>';
+    b.addEventListener("click", function(){ open(c); });
+    elList.appendChild(b);
+  });
+}
+
+/* ───── 物語を開く ───── */
+const elPlay    = document.getElementById("play");
+const elStage   = document.getElementById("stage");
+const elTalk    = document.getElementById("talk");
+const elWho     = document.getElementById("who");
+const elLine    = document.getElementById("line");
+const elProg    = document.getElementById("prog");
+const elCurtain = document.getElementById("curtain");
+const elEnd     = document.getElementById("end");
+const elHeadNm  = document.getElementById("headName");
+const elSnd     = document.getElementById("snd");
+
+let story = null, i = 0, started = false, soundOn = true;
+const audio = new Audio();
+
+function open(c){
+  if (!c.ready){
+    alert(c.title + " は準備中です。\nいまは「鹿苑寺（金閣寺）」をお聞きいただけます。");
+    return;
+  }
+  fetch("stories/" + c.dir + "/story.json")
+    .then(function(r){ if(!r.ok) throw new Error("story.json が読めません"); return r.json(); })
+    .then(function(d){
+      story = d; story._dir = c.dir;
+      i = 0; started = false;
+      elHeadNm.textContent = d.title;
+      document.getElementById("curTitle").textContent = d.title + " に着きました";
+      document.getElementById("curQ").textContent = d.question || "";
+      drawStage(d.scene);
+      elProg.innerHTML = d.scenes.map(function(){ return "<i></i>"; }).join("");
+      elCurtain.classList.remove("hide");
+      elEnd.classList.remove("on");
+      elTalk.style.display = "";
+      elProg.style.display = "";
+      elList.classList.add("off");
+      elPlay.classList.add("on");
+      document.getElementById("notice").style.display = "none";
+      draw();
+      window.scrollTo(0,0);
+    })
+    .catch(function(e){ alert("読み込みに失敗しました。" + e.message); });
+}
+
+function toList(){
+  audio.pause();
+  elPlay.classList.remove("on");
+  elList.classList.remove("off");
+  document.getElementById("notice").style.display = "";
+  elHeadNm.textContent = "文明の軌跡";
+  drawList();
+  window.scrollTo(0,0);
+}
 
 function draw(){
-  const s = script[i];
-  elSpeaker.textContent = s.who;
+  const s = story.scenes[i];
+  elWho.textContent = s.who;
   elLine.textContent = s.text;
-  elTalk.className = "talk " + (s.type === "yos" ? "is-yos" : "is-nav");
-  dots.forEach(function(d, n){ d.classList.toggle("on", n <= i); });
-  elNext.style.visibility = (i === script.length - 1) ? "hidden" : "visible";
+  elTalk.className = "talk " + (s.type === "nav" ? "is-nav" : "is-yos");
+  updateStage();
+  const dots = Array.prototype.slice.call(elProg.children);
+  dots.forEach(function(d, n){ d.className = (n <= i ? "on" : ""); });
 }
-// 音声
-const audio = new Audio();
-audio.preload = "auto";
-const elSnd = document.getElementById("snd");
-const elSpeaking = document.getElementById("speaking");
-const elStart = document.getElementById("start");
-let soundOn = true;
-let started = false;
 
-function setSoundIcon(){
-  elSnd.classList.toggle("off", !soundOn);
-  document.getElementById("wave").style.display = soundOn ? "" : "none";
-  document.getElementById("mute").style.display = soundOn ? "none" : "";
-}
 function playCurrent(){
-  audio.pause();
-  elSpeaking.classList.add("hide");
-  if (!soundOn || !started) return;
-  audio.src = "voice/" + script[i].id + ".m4a";
+  if (!soundOn) return;
+  const s = story.scenes[i];
+  if (!s.voice) return;
+  audio.src = story._dir ? ("stories/" + story._dir + "/" + (story.voiceDir || "voice") + "/" + s.voice) : "";
   const p = audio.play();
-  if (p && p.catch) p.catch(function(){ elSpeaking.classList.add("hide"); });
+  if (p && p.catch) p.catch(function(){ /* 自動再生が止められても読み進められる */ });
 }
-audio.addEventListener("playing", function(){ elSpeaking.classList.remove("hide"); });
-audio.addEventListener("pause", function(){ elSpeaking.classList.add("hide"); });
-audio.addEventListener("ended", function(){
-  elSpeaking.classList.add("hide");
-  if (i < script.length - 1){ i++; draw(); playCurrent(); }
-});
-elSnd.addEventListener("click", function(e){
-  e.stopPropagation();
-  soundOn = !soundOn;
-  setSoundIcon();
-  if (soundOn) playCurrent(); else audio.pause();
-});
-setSoundIcon();
 
 function advance(){
-  if (!started){ started = true; elStart.classList.add("hide"); playCurrent(); return; }
-  if (i < script.length - 1){ i++; draw(); playCurrent(); }
+  if (!started){ started = true; elCurtain.classList.add("hide"); playCurrent(); return; }
+  if (i < story.scenes.length - 1){ i++; draw(); playCurrent(); return; }
+  finish();
 }
-document.getElementById("app").addEventListener("click", advance);
 
-// 縦長の画面では絵が横に切れるので、描画する範囲を広げて全体を収める
-const elScene = document.getElementById("scene");
-function fitScene(){
-  const w = document.getElementById("app").clientWidth;
-  const h = window.innerHeight;
-  const ratio = w / h;
-  if (ratio < 0.75){
-    elScene.setAttribute("viewBox", "-230 -120 1360 760");
-  } else if (ratio < 1.05){
-    elScene.setAttribute("viewBox", "-110 -60 1120 690");
-  } else {
-    elScene.setAttribute("viewBox", "0 0 900 620");
+function finish(){
+  audio.pause();
+  markSeen(story._dir);
+  elTalk.style.display = "none";
+  elProg.style.display = "none";
+  elEnd.classList.add("on");
+}
+
+audio.addEventListener("ended", function(){
+  if (i < story.scenes.length - 1){ i++; draw(); playCurrent(); }
+  else { finish(); }
+});
+
+elPlay.addEventListener("click", function(e){
+  if (e.target.closest(".btn")) return;
+  if (e.target.closest(".end")) return;
+  advance();
+});
+
+elSnd.addEventListener("click", function(){
+  soundOn = !soundOn;
+  elSnd.textContent = soundOn ? "音声を止める" : "音声を鳴らす";
+  elSnd.classList.toggle("off", !soundOn);
+  if (!soundOn) audio.pause(); else playCurrent();
+});
+document.getElementById("back").addEventListener("click", toList);
+document.getElementById("toList").addEventListener("click", toList);
+
+/* ───── 背景の絵と人物。生成した画像を敷き、人物は右に立たせる ─────
+   絵が無い場所では、これまでどおり SVG で描く（読み込み失敗時も同じ） */
+let elBg = null, elCh = null;
+function drawStage(name){
+  elBg = elCh = null;
+  if (!story || !story._dir){ elStage.innerHTML = SCENE[name] || SCENE._default; return; }
+  elStage.innerHTML = "";
+  const base = "stories/" + story._dir + "/";
+  const bg = document.createElement("img");
+  bg.className = "bg"; bg.alt = "";
+  bg.onerror = function(){ elStage.innerHTML = SCENE[name] || SCENE._default; elBg = elCh = null; };
+  bg.src = base + "bg/" + name + ".jpg";
+  elStage.appendChild(bg); elBg = bg;
+  if (story.chara && story.chara.file){
+    const ch = document.createElement("img");
+    ch.className = "ch off"; ch.alt = "";
+    ch.onerror = function(){ ch.remove(); elCh = null; };
+    ch.src = base + story.chara.file;
+    elStage.appendChild(ch); elCh = ch;
   }
 }
-window.addEventListener("resize", fitScene);
-fitScene();
-draw();
+
+/* 場面ごとに背景を差し替える（story.json の bg があれば優先） */
+function updateStage(){
+  const s = story.scenes[i];
+  if (elBg){
+    const want = "stories/" + story._dir + "/bg/" + (s.bg || story.scene) + ".jpg";
+    if (!elBg.src.endsWith(want)) elBg.src = want;
+  }
+  /* 人物はその人の台詞のときだけ出す。ナレーションでは引っ込める */
+  if (elCh) elCh.classList.toggle("off", s.type === "nav");
+}
+const SCENE = {
+  _default:
+    '<svg viewBox="0 0 720 400" preserveAspectRatio="xMidYMid slice">' +
+      '<rect width="720" height="400" fill="#d9d2c0"/>' +
+      '<path d="M0 250 L160 170 L300 245 L440 160 L580 240 L720 180 L720 400 L0 400Z" fill="#b9b19a"/>' +
+    '</svg>',
+
+  /* 金閣。三層＋池。色は生成りに合わせて彩度を落としてある */
+  kinkakuji:
+    '<svg viewBox="0 0 720 400" preserveAspectRatio="xMidYMid slice">' +
+      '<defs>' +
+        '<linearGradient id="k1" x1="0" y1="0" x2="0" y2="1">' +
+          '<stop offset="0" stop-color="#dcd4c0"/><stop offset="1" stop-color="#c6bda4"/></linearGradient>' +
+        '<linearGradient id="k2" x1="0" y1="0" x2="0" y2="1">' +
+          '<stop offset="0" stop-color="#c9a227"/><stop offset="1" stop-color="#a8811a"/></linearGradient>' +
+        '<linearGradient id="k3" x1="0" y1="0" x2="0" y2="1">' +
+          '<stop offset="0" stop-color="#8e9a96"/><stop offset="1" stop-color="#6d7a78"/></linearGradient>' +
+      '</defs>' +
+      '<rect width="720" height="400" fill="url(#k1)"/>' +
+      '<path d="M0 190 L120 130 L250 185 L380 120 L520 180 L640 135 L720 175 L720 400 L0 400Z" fill="#a9b0a0" opacity=".7"/>' +
+      '<g transform="translate(250 95) scale(.8)">' +
+        '<rect x="78" y="0"  width="140" height="46" fill="url(#k2)"/>' +
+        '<path d="M62 4 L234 4 L206 -20 L90 -20Z" fill="#3a352c"/>' +
+        '<rect x="52" y="54" width="192" height="60" fill="url(#k2)"/>' +
+        '<path d="M32 58 L264 58 L232 30 L64 30Z" fill="#3a352c"/>' +
+        '<rect x="26" y="122" width="244" height="72" fill="#e3dac6"/>' +
+        '<path d="M2 126 L294 126 L262 96 L34 96Z" fill="#3a352c"/>' +
+        '<g stroke="#a99e85" stroke-width="2">' +
+          '<line x1="62" y1="128" x2="62" y2="194"/><line x1="110" y1="128" x2="110" y2="194"/>' +
+          '<line x1="186" y1="128" x2="186" y2="194"/><line x1="234" y1="128" x2="234" y2="194"/></g>' +
+        '<rect x="14" y="194" width="268" height="10" fill="#544d40"/>' +
+      '</g>' +
+      '<rect y="262" width="720" height="138" fill="url(#k3)"/>' +
+      '<g stroke="#b6c0bb" stroke-width="1.4" opacity=".45">' +
+        '<line x1="90"  y1="288" x2="270" y2="288"/><line x1="420" y1="300" x2="640" y2="300"/>' +
+        '<line x1="160" y1="326" x2="390" y2="326"/><line x1="450" y1="348" x2="660" y2="348"/></g>' +
+      '<g fill="#5e6b5c">' +
+        '<path d="M36 272 L66 208 L96 272Z"/><rect x="62" y="266" width="7" height="22"/>' +
+        '<path d="M626 280 L652 222 L678 280Z"/><rect x="648" y="274" width="7" height="20"/></g>' +
+    '</svg>'
+};
+
+drawList();
 </script>
 </body>
 </html>
