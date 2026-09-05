@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>文明の軌跡</title>
+<!-- ★2026-09-05 追加。字体を端末まかせにすると、明朝が入っていない端末でゴシックになる。
+     Noto Serif JP（SIL Open Font License）を読み、どの端末でも同じ字で出す。
+     Google Fonts は unicode-range で必要な字だけ配るので、全部は落ちてこない。 -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600&display=swap">
 <style>
   :root{
     /* 歴史っぽい色。生成りの地に墨の文字、差し色は朱ひとつ */
@@ -16,9 +22,9 @@
     --aka-usu:#f2e3df;
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-  html,body{height:100%}
+  html,body{min-height:100%}
   body{
-    font-family:"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP",serif;
+    font-family:"Noto Serif JP","Hiragino Mincho ProN","Yu Mincho",serif;
     background:var(--paper); color:var(--sumi);
     display:flex; justify-content:center;
     line-height:1.9;
@@ -27,7 +33,15 @@
     width:100%; max-width:720px; min-height:100dvh;
     display:flex; flex-direction:column;
     background:var(--paper);
-    position:relative; overflow:hidden;
+    /* ★overflow の指定を外した（2026-09-05）。
+       もとは overflow:hidden で、中身が画面より高いとき、はみ出した分が
+       切り取られて指で届かなくなっていた。一覧は10本あって縦844pxの画面では
+       1551pxになる＝下の数本に触れなかった。
+       ★overflow-x:hidden も駄目。CSSの決まりで overflow-y が auto に変わり、
+       .app の中だけでスクロールする形になってページ自体が伸びない。
+       あわせて html,body の height:100% も min-height:100% に変えた。
+       絵のはみ出しは .stage の overflow:hidden で止めてある。 */
+    position:relative;
   }
 
   /* ───── 上の帯 ───── */
@@ -138,6 +152,10 @@
   }
   .btn:active{background:var(--paper-2)}
   .btn.snd.off{color:var(--line)}
+  .btn:disabled{color:var(--line); border-color:var(--line); cursor:default}
+  /* ★指で押す的を大きくする（屋外・片手で使うため）。見た目は変えない */
+  .btn{min-height:40px}
+  .next{min-height:44px}
 
   .curtain{
     position:absolute; inset:0; z-index:5; display:grid; place-items:center;
@@ -161,13 +179,19 @@
 
   /* ───── 横画面。縦に積むと本文が画面の下に隠れるので、左右に並べる ───── */
   @media (orientation:landscape) and (max-height:560px){
-    .app{min-height:100dvh; max-width:none}
+    /* ★横画面は画面の中に収める（2026-09-05 修正）。
+       もとは .app{min-height:100dvh} と .play.on{height:100dvh} が重なり、
+       上の帯（約51px）のぶんだけ縦にはみ出していた。
+       .app の overflow:hidden で見えなくなっていただけで、
+       それを外したら「つづき」が画面の外に出た。
+       .app の高さを画面ちょうどにして、.play を残り全部に伸ばす。 */
+    .app{height:100dvh; min-height:0; max-width:none; overflow:hidden}
     .head{padding:7px 16px}
     .head .name{font-size:15px}
     .head .steps .n{font-size:16px}
 
     .play.on{
-      display:grid; height:100dvh; overflow:hidden;
+      display:grid; flex:1 1 auto; min-height:0; height:auto; overflow:hidden;
       grid-template-columns:46% 1fr;
       grid-template-rows:auto 1fr auto;
       grid-template-areas:
@@ -216,13 +240,14 @@
 
     <div class="ctrl">
       <button class="btn" id="back">一覧へ</button>
+      <button class="btn" id="prev" disabled>前へ</button>
       <button class="btn snd" id="snd">音声を止める</button>
     </div>
 
     <div class="talk is-nav" id="talk">
       <div class="who" id="who">ナレーション</div>
       <div class="box">
-        <div class="line" id="line"></div>
+        <div class="line" id="line" aria-live="polite" aria-atomic="true"></div>
         <div class="foot">
           <button class="next" id="next">つづき <i>▼</i></button>
         </div>
@@ -312,6 +337,7 @@ const elCurtain = document.getElementById("curtain");
 const elEnd     = document.getElementById("end");
 const elHeadNm  = document.getElementById("headName");
 const elSnd     = document.getElementById("snd");
+const elPrev    = document.getElementById("prev");
 
 let story = null, i = 0, started = false, soundOn = true;
 const audio = new Audio();
@@ -340,19 +366,30 @@ function open(c){
       document.getElementById("notice").style.display = "none";
       draw();
       window.scrollTo(0,0);
+      /* ★スマホの「戻る」で一覧へもどれるようにする（2026-09-05）。
+         これが無いと、戻るジェスチャーでサイトの外へ出てしまう。 */
+      try { history.pushState({view:"play", dir:c.dir}, "", "#" + c.dir); } catch(e){}
     })
     .catch(function(e){ alert("読み込みに失敗しました。" + e.message); });
 }
 
-function toList(){
+function toList(fromPop){
   audio.pause();
+  keepAwake(false);
   elPlay.classList.remove("on");
   elList.classList.remove("off");
   document.getElementById("notice").style.display = "";
   elHeadNm.textContent = "文明の軌跡";
   drawList();
   window.scrollTo(0,0);
+  /* 「一覧へ」を押して戻った場合は、履歴も1つ戻しておく。
+     戻るボタンで来たとき（fromPop）は、もう戻っているので何もしない。 */
+  if (!fromPop && location.hash){ try { history.back(); } catch(e){} }
 }
+
+window.addEventListener("popstate", function(){
+  if (elPlay.classList.contains("on")) toList(true);
+});
 
 function draw(){
   const s = story.scenes[i];
@@ -362,7 +399,51 @@ function draw(){
   updateStage();
   const dots = Array.prototype.slice.call(elProg.children);
   dots.forEach(function(d, n){ d.className = (n <= i ? "on" : ""); });
+  elPrev.disabled = (i <= 0);
+  preloadNext();
 }
+
+/* ★1つ前の場面へもどる（2026-09-05）。
+   画面のどこを押しても進む作りなので、誤って押しても取り返せるようにした。 */
+function back1(){
+  if (!started || i <= 0) return;
+  i--; draw(); playCurrent();
+}
+
+/* ★次の場面の音声を先に読んでおく（2026-09-05）。
+   進むたびに読み込むと、電波の弱いところで声が途切れる。 */
+const pre = new Audio();
+pre.preload = "auto";
+function preloadNext(){
+  if (!story || !story._dir) return;
+  const n = story.scenes[i+1];
+  if (!n || !n.voice) return;
+  const url = "stories/" + story._dir + "/" + (story.voiceDir || "voice") + "/" + n.voice;
+  if (pre.src.endsWith(url)) return;
+  pre.src = url;
+  try { pre.load(); } catch(e){ /* 読めなくても本編の再生には影響しない */ }
+}
+
+/* ★聞いている間、画面が消えないようにする（2026-09-05）。
+   歩いて現地で聞く使い方なので、途中で暗くなると押せなくなる。 */
+let wake = null;
+function keepAwake(on){
+  try {
+    if (on && !wake && "wakeLock" in navigator){
+      navigator.wakeLock.request("screen").then(function(w){
+        wake = w;
+        w.addEventListener("release", function(){ wake = null; });
+      }).catch(function(){ /* 断られても物語は聞ける */ });
+    } else if (!on && wake){
+      wake.release().catch(function(){});
+      wake = null;
+    }
+  } catch(e){ /* 対応していない端末では何もしない */ }
+}
+document.addEventListener("visibilitychange", function(){
+  /* 画面を戻したとき、いったん外れた鍵をかけ直す */
+  if (document.visibilityState === "visible" && elPlay.classList.contains("on") && started) keepAwake(true);
+});
 
 function playCurrent(){
   if (!soundOn) return;
@@ -374,13 +455,14 @@ function playCurrent(){
 }
 
 function advance(){
-  if (!started){ started = true; elCurtain.classList.add("hide"); playCurrent(); return; }
+  if (!started){ started = true; elCurtain.classList.add("hide"); keepAwake(true); playCurrent(); return; }
   if (i < story.scenes.length - 1){ i++; draw(); playCurrent(); return; }
   finish();
 }
 
 function finish(){
   audio.pause();
+  keepAwake(false);
   markSeen(story._dir);
   elTalk.style.display = "none";
   elProg.style.display = "none";
@@ -395,7 +477,21 @@ audio.addEventListener("ended", function(){
 elPlay.addEventListener("click", function(e){
   if (e.target.closest(".btn")) return;
   if (e.target.closest(".end")) return;
+  /* ★ボタンの列は、狙って外したときに進まないようにする（2026-09-05） */
+  if (e.target.closest(".ctrl")) return;
   advance();
+});
+
+/* ★前へ（2026-09-05） */
+elPrev.addEventListener("click", back1);
+
+/* ★パソコンで見るとき、キーでも進める（2026-09-05）。
+   スペース・→・Enter で進み、← でもどる。 */
+document.addEventListener("keydown", function(e){
+  if (!elPlay.classList.contains("on")) return;
+  if (e.target && /^(INPUT|TEXTAREA)$/.test(e.target.tagName)) return;
+  if (e.key === " " || e.key === "ArrowRight" || e.key === "Enter"){ e.preventDefault(); advance(); }
+  else if (e.key === "ArrowLeft"){ e.preventDefault(); back1(); }
 });
 
 elSnd.addEventListener("click", function(){

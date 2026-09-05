@@ -31,10 +31,13 @@ voice/_hikaku/
 voice/_old-2026-09-03/
 voice/_refwav/
 voice/*.wav
-stories/*/voice/_old-2026-09-03/
+# ★日付を固定していたので 09-04 と 09-05 の退避が漏れていた（2026-09-05 修正）。
+#   147ファイル・約28MBが公開に混じるところだった。
+stories/*/voice/_old-*/
 
 # 参考画像（元は Wikimedia。手元に置くだけで公開はしない）
 art/
 
 # 退避
-*.bak-*
+# ★.bak- だけを見ていたので .bak2- .bak3- などが漏れていた（2026-09-05 修正）
+*.bak*
