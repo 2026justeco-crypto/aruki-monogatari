@@ -10,6 +10,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600&display=swap">
+<!-- ★2026-09-05 追加。ホーム画面に置けるようにし、電波が弱いところでも聞けるようにする -->
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#efe9dc">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="文明の軌跡">
 <style>
   :root{
     /* 歴史っぽい色。生成りの地に墨の文字、差し色は朱ひとつ */
@@ -502,6 +508,18 @@ elSnd.addEventListener("click", function(){
 });
 document.getElementById("back").addEventListener("click", toList);
 document.getElementById("toList").addEventListener("click", toList);
+
+/* ★一度開いたものを手元に残す（2026-09-05）。
+   歩いて現地で聞くので、電波が弱いところでも鳴るようにする。
+   仕組みは sw.js（Workbox）。全部を先に落とすのではなく、
+   開いた物語の音声と絵だけが残る。 */
+if ("serviceWorker" in navigator){
+  window.addEventListener("load", function(){
+    navigator.serviceWorker.register("sw.js").catch(function(){
+      /* 登録できなくても、ふつうに読み込んで聞ける */
+    });
+  });
+}
 
 /* ───── 背景の絵と人物。生成した画像を敷き、人物は右に立たせる ─────
    絵が無い場所では、これまでどおり SVG で描く（読み込み失敗時も同じ） */
