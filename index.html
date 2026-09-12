@@ -57,6 +57,15 @@
     background:var(--paper);
   }
   .head .name{font-size:17px; font-weight:600; letter-spacing:.08em}
+  /* ★小学生むけの切り替え（2026-09-12）。押している間は朱で塗る */
+  .head .mode{
+    font:inherit; font-size:12px; letter-spacing:.04em; cursor:pointer;
+    border:1px solid var(--line); border-radius:3px; background:var(--paper);
+    color:var(--sumi-2); padding:6px 10px; min-height:34px;
+  }
+  .head .mode.on{background:var(--aka); border-color:var(--aka); color:var(--paper)}
+  .head .mode:active{background:var(--paper-2)}
+  .head .mode.on:active{background:var(--aka)}
   .head .steps{margin-left:auto; text-align:right; line-height:1.35}
   .head .steps .n{font-size:19px; font-weight:600; color:var(--aka); letter-spacing:.02em}
   .head .steps .t{font-size:11px; color:var(--sumi-2)}
@@ -225,6 +234,9 @@
 
   <div class="head">
     <div class="name" id="headName">文明の軌跡</div>
+    <!-- ★2026-09-12 追加。小学生には難しい言葉があるので、やさしい言い方に切り替えられるようにした。
+         声も切り替わる（同じ人の声で、文だけ易しい） -->
+    <button class="mode" id="mode" aria-pressed="false">小学生むけ</button>
     <div class="steps">
       <div class="n" id="steps">99999</div>
       <div class="t">残り歩数</div>
@@ -348,6 +360,20 @@ const elPrev    = document.getElementById("prev");
 let story = null, i = 0, started = false, soundOn = true;
 const audio = new Audio();
 
+/* ───── 小学生むけの切り替え（2026-09-12） ─────
+   台本（story.json）の各場面に textKids / voiceKids があれば、そちらを出す。
+   ★用意できていない話や場面では、黙ってふつうの方を出す＝空にしない。 */
+const MODE_KEY = "bunmei.kids";
+let kidsOn = false;
+try { kidsOn = localStorage.getItem(MODE_KEY) === "1"; } catch(e){ kidsOn = false; }
+
+function 本文(s){ return (kidsOn && s.textKids) ? s.textKids : s.text; }
+function 音声の道(s){
+  if (kidsOn && s.voiceKids) return (story.voiceDirKids || "voice-kids") + "/" + s.voiceKids;
+  if (s.voice) return (story.voiceDir || "voice") + "/" + s.voice;
+  return "";
+}
+
 function open(c){
   if (!c.ready){
     alert(c.title + " は準備中です。\nいまは「鹿苑寺（金閣寺）」をお聞きいただけます。");
@@ -400,7 +426,7 @@ window.addEventListener("popstate", function(){
 function draw(){
   const s = story.scenes[i];
   elWho.textContent = s.who;
-  elLine.textContent = s.text;
+  elLine.textContent = 本文(s);
   elTalk.className = "talk " + (s.type === "nav" ? "is-nav" : "is-yos");
   updateStage();
   const dots = Array.prototype.slice.call(elProg.children);
@@ -423,8 +449,10 @@ pre.preload = "auto";
 function preloadNext(){
   if (!story || !story._dir) return;
   const n = story.scenes[i+1];
-  if (!n || !n.voice) return;
-  const url = "stories/" + story._dir + "/" + (story.voiceDir || "voice") + "/" + n.voice;
+  if (!n) return;
+  const 道 = 音声の道(n);
+  if (!道) return;
+  const url = "stories/" + story._dir + "/" + 道;
   if (pre.src.endsWith(url)) return;
   pre.src = url;
   try { pre.load(); } catch(e){ /* 読めなくても本編の再生には影響しない */ }
@@ -454,8 +482,9 @@ document.addEventListener("visibilitychange", function(){
 function playCurrent(){
   if (!soundOn) return;
   const s = story.scenes[i];
-  if (!s.voice) return;
-  audio.src = story._dir ? ("stories/" + story._dir + "/" + (story.voiceDir || "voice") + "/" + s.voice) : "";
+  const 道 = 音声の道(s);
+  if (!道) return;
+  audio.src = story._dir ? ("stories/" + story._dir + "/" + 道) : "";
   const p = audio.play();
   if (p && p.catch) p.catch(function(){ /* 自動再生が止められても読み進められる */ });
 }
@@ -506,6 +535,25 @@ elSnd.addEventListener("click", function(){
   elSnd.classList.toggle("off", !soundOn);
   if (!soundOn) audio.pause(); else playCurrent();
 });
+/* ★小学生むけ ⇄ ふつう（2026-09-12）。
+   物語の途中で押しても、同じ場面のまま入れ替わる（読んでいた所を失わない）。 */
+const elMode = document.getElementById("mode");
+function drawMode(){
+  elMode.textContent = kidsOn ? "ふつうに戻す" : "小学生むけ";
+  elMode.classList.toggle("on", kidsOn);
+  elMode.setAttribute("aria-pressed", kidsOn ? "true" : "false");
+}
+elMode.addEventListener("click", function(){
+  kidsOn = !kidsOn;
+  try { localStorage.setItem(MODE_KEY, kidsOn ? "1" : "0"); } catch(e){ /* 保存できなくてもその場では効く */ }
+  drawMode();
+  if (story && elPlay.classList.contains("on")){
+    draw();
+    if (started){ audio.pause(); playCurrent(); }   /* 切り替えた側の声で、同じ場面を鳴らし直す */
+  }
+});
+drawMode();
+
 document.getElementById("back").addEventListener("click", toList);
 document.getElementById("toList").addEventListener("click", toList);
 
